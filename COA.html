@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COA PROJECT SIMULATOR</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Define custom pastel colors and font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        // Base Dark Theme
+                        'dark-bg': '#111827',
+                        'dark-card': 'rgba(31, 41, 55, 0.5)', // bg-gray-800 with 50% opacity
+                        'dark-glass': 'rgba(255, 255, 255, 0.05)',
+                        'text-dark': '#F9FAFB', // Light text for dark mode
+                        'text-light': '#9CA3AF', // Lighter text
+                        
+                        // Theme Colors
+                        'theme-sky': { DEFAULT: '#38bdf8', dark: '#0c4a6e', light: '#bae6fd' },
+                        'theme-emerald': { DEFAULT: '#34d399', dark: '#047857', light: '#a7f3d0' },
+                        'theme-amber': { DEFAULT: '#f59e0b', dark: '#b45309', light: '#fde68a' },
+                        'theme-lime': { DEFAULT: '#a3e635', dark: '#4d7c0f', light: '#d9f99d' },
+                        'theme-cyan': { DEFAULT: '#22d3ee', dark: '#155e75', light: '#a5f3fc' },
+                        'theme-indigo': { DEFAULT: '#818cf8', dark: '#3730a3', light: '#c7d2fe' },
+                        'theme-blue': { DEFAULT: '#60a5fa', dark: '#1e40af', light: '#bfdbfe' },
+                        'theme-rose': { DEFAULT: '#fb7185', dark: '#9f1239', light: '#fecdd3' },
+                        'theme-pink': { DEFAULT: '#f472b6', dark: '#9d174d', light: '##fbcfe8' },
+                        'theme-violet': { DEFAULT: '#a78bfa', dark: '#5b21b6', light: '#ddd6fe' },
+                        'theme-teal': { DEFAULT: '#2dd4bf', dark: '#134e4a', light: '#99f6e4' },
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Base transition for page background */
+        body {
+            background-color: #111827;
+            transition: background 0.8s ease-out;
+            color: #F9FAFB;
+        }
+
+        /* Hide all input sections by default */
+        .input-section {
+            display: none;
+        }
+        .input-section.active {
+            display: block;
+        }
+
+        /* Styles for the horizontal scroll container */
+        .scroll-container {
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #4B5563 #111827; /* Darker scrollbar for dark cards */
+        }
+        .scroll-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background-color: #4B5563;
+            border-radius: 4px;
+        }
+        .scroll-container::-webkit-scrollbar-track {
+            background-color: #111827; /* Match dark card bg */
+            border-radius: 4px;
+        }
+        
+        /* Simple transition for accordions */
+        .accordion-content {
+            transition: max-height 0.4s ease-out, opacity 0.3s ease-in-out, transform 0.4s ease-out;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        .accordion-content.open {
+            max-height: 1000px;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* accordion arrow */
+        .accordion-arrow {
+            transition: transform 0.3s ease;
+        }
+        .accordion-arrow.open {
+            transform: translateX(4px);
+        }
+        
+        /* Copy button style */
+        #copy-btn {
+            display: none; /* Hidden by default */
+        }
+        
+        /* Custom "glass" dropdown */
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239CA3AF' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+    <!-- Main container with max-width and centering -->
+    <div class="container mx-auto max-w-4xl p-4 md:p-8">
+        
+        <!-- "Product Launch" Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-6xl md:text-7xl font-black tracking-tighter text-white">
+                COA PROJECT
+                <span id="header-brand" class="block bg-clip-text text-transparent transition-colors duration-500">SIMULATOR</span>
+            </h1>
+            <p id="header-subtitle" class="text-xl md:text-2xl text-text-light mt-4 transition-colors duration-500">An Interactive Simulator for Visualizing Computer Architecture Algorithms</p>
+        </header>
+
+        <!-- Main Calculator Section -->
+        <!-- "Glass" Re-engineered -->
+        <div id="calculator-card" class="backdrop-blur-md bg-dark-glass shadow-2xl rounded-2xl p-8 md:p-12 border transition-all duration-500">
+            
+            <!-- Step 1: Dropdown -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-semibold text-white pb-2">1. Select Algorithm</h2>
+                <div class="relative mt-4">
+                    <!-- FIX: Replaced "product" names with course handout names -->
+                    <select id="method-select" class="custom-select w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-lg font-medium text-white">
+                        <option value="base-conversion">Number System Conversion</option>
+                        <option value="twos-complement">1's & 2's Complement</option>
+                        <option value="bcd-conversion">Decimal to BCD</option>
+                        <option value="excess3-conversion">Decimal to Excess-3</option>
+                        <option value="grey-code-conversion">Grey Code Converter</option>
+                        <option value="binary-arithmetic">Binary Arithmetic</option>
+                        <option value="bcd-arithmetic">BCD Arithmetic</option>
+                        <option value="booths-algorithm">Booth's Algorithm</option>
+                        <option value="restoring-division">Restoring Division</option>
+                        <option value="non-restoring-division">Non-Restoring Division</option>
+                        <option value="ieee-754-converter">IEEE 754 Converter</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Inputs Container -->
+            <div id="inputs-container" class="mb-8 space-y-4">
+                
+                <!-- Base Conversion (Active by default) -->
+                <div id="inputs-base-conversion" class="input-section active space-y-4">
+                    <div>
+                        <label for="number-base" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m16.5-19.5l-3.9 19.5" /></svg>
+                            Number
+                        </label>
+                        <input type="text" id="number-base" placeholder="Enter number (e.g., 100)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="relative">
+                            <label for="from-base" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                                <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 9l-3 3m0 0l3 3m-3-3h7.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                From Base
+                            </label>
+                            <select id="from-base" class="custom-select w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                                <option value="10">10 (Decimal)</option>
+                                <option value="2">2 (Binary)</option>
+                                <option value="8">8 (Octal)</option>
+                                <option value="16">16 (Hexadecimal)</option>
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <label for="to-base" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                                <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12.75 15l3-3m0 0l-3-3m3 3h-7.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                To Base
+                            </label>
+                            <select id="to-base" class="custom-select w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                                <option value="2">2 (Binary)</option>
+                                <option value="10">10 (Decimal)</option>
+                                <option value="8">8 (Octal)</option>
+                                <option value="16">16 (Hexadecimal)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 1's & 2's Complement -->
+                <div id="inputs-twos-complement" class="input-section space-y-4">
+                    <div>
+                        <label for="binary-in" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                            Binary Number
+                        </label>
+                        <input type="text" id="binary-in" placeholder="Enter a binary string (e.g., 01101)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                </div>
+
+                <!-- BCD Conversion -->
+                <div id="inputs-bcd-conversion" class="input-section space-y-4">
+                    <div>
+                        <label for="decimal-in-bcd" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m16.5-19.5l-3.9 19.5" /></svg>
+                            Decimal Number
+                        </label>
+                        <input type="text" id="decimal-in-bcd" placeholder="Enter a decimal string (e.g., 49)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                </div>
+
+                <!-- Excess-3 Conversion -->
+                <div id="inputs-excess3-conversion" class="input-section space-y-4">
+                    <div>
+                        <label for="decimal-in-ex3" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m16.5-19.5l-3.9 19.5" /></svg>
+                            Decimal Number
+                        </label>
+                        <input type="text" id="decimal-in-ex3" placeholder="Enter a decimal string (e.g., 49)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                </div>
+
+                <!-- Grey Code Conversion -->
+                <div id="inputs-grey-code-conversion" class="input-section space-y-4">
+                    <div>
+                        <label for="grey-in-val" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                            Input Value
+                        </label>
+                        <input type="text" id="grey-in-val" placeholder="e.g., 1011 (binary) or 15 (decimal)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                    <div class="relative">
+                        <label for="grey-in-type" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                             <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" /></svg>
+                             Input Type
+                        </label>
+                        <select id="grey-in-type" class="custom-select w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                            <option value="binary">Binary to Grey</option>
+                            <option value="decimal">Decimal to Grey</option>
+                            <option value="grey-binary">Grey to Binary</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Binary Arithmetic -->
+                <div id="inputs-binary-arithmetic" class="input-section space-y-4">
+                    <div>
+                        <label for="binary-a" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                           <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                           Binary Number A
+                        </label>
+                        <input type="text" id="binary-a" placeholder="e.g., 0110" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                    <div>
+                        <label for="binary-b" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                           <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                           Binary Number B
+                        </label>
+                        <input type="text" id="binary-b" placeholder="e.g., 0010" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                     <div class="relative">
+                        <label for="binary-op" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            Operation
+                        </label>
+                        <select id="binary-op" class="custom-select w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                            <option value="add">Add (A + B)</option>
+                            <option value="subtract">Subtract (A - B)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- BCD Arithmetic -->
+                <div id="inputs-bcd-arithmetic" class="input-section space-y-4">
+                    <div>
+                        <label for="bcd-a" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                           <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                           BCD Number A
+                        </label>
+                        <input type="text" id="bcd-a" placeholder="e.g., 0100 1001 (49)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                    <div>
+                        <label for="bcd-b" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                           <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                           BCD Number B
+                        </label>
+                        <input type="text" id="bcd-b" placeholder="e.g., 0001 0010 (12)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                </div>
+
+                <!-- Booth's Algorithm -->
+                <div id="inputs-booths-algorithm" class="input-section space-y-4">
+                    <div>
+                        <label for="booth-m" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m16.5-19.5l-3.9 19.5" /></svg>
+                            Multiplicand (M)
+                        </label>
+                        <input type="number" id="booth-m" placeholder="Enter decimal integer (e.g., 7 or -7)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                    <div>
+                        <label for="booth-q" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                           <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m16.5-19.5l-3.9 19.5" /></svg>
+                           Multiplier (Q)
+                        </label>
+                        <input type="number" id="booth-q" placeholder="Enter decimal integer (e.g., 3 or -3)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                </div>
+                
+                <!-- Restoring Division -->
+                <div id="inputs-restoring-division" class="input-section space-y-4">
+                    <div>
+                        <label for="dividend-r" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m16.5-19.5l-3.9 19.5" /></svg>
+                            Dividend (Q)
+                        </label>
+                        <input type="number" id="dividend-r" placeholder="Enter positive integer (e.g., 7)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                    <div>
+                        <label for="divisor-r" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                           <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m16.5-19.5l-3.9 19.5" /></svg>
+                           Divisor (M)
+                        </label>
+                        <input type="number" id="divisor-r" placeholder="Enter positive integer (e.g., 3)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                </div>
+
+                <!-- Non-Restoring Division -->
+                <div id="inputs-non-restoring-division" class="input-section space-y-4">
+                    <div>
+                        <label for="dividend-nr" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m16.5-19.5l-3.9 19.5" /></svg>
+                            Dividend (Q)
+                        </label>
+                        <input type="number" id="dividend-nr" placeholder="Enter positive integer (e.g., 7)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                    <div>
+                        <label for="divisor-nr" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                           <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m-2.1-19.5l-3.9 19.5m16.5-19.5l-3.9 19.5" /></svg>
+                           Divisor (M)
+                        </label>
+                        <input type="number" id="divisor-nr" placeholder="Enter positive integer (e.g., 3)" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                </div>
+
+                <!-- IEEE 754 -->
+                <div id="inputs-ieee-754-converter" class="input-section space-y-4">
+                    <div>
+                        <label for="ieee-in-val" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                            Input Value
+                        </label>
+                        <input type="text" id="ieee-in-val" placeholder="e.g., -12.75 or 0x414C0000" class="w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                    </div>
+                    <div class="relative">
+                        <label for="ieee-in-type" class="flex items-center mb-1 text-sm font-medium text-text-light">
+                             <svg class="w-4 h-4 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" /></svg>
+                             Input Type
+                        </label>
+                        <select id="ieee-in-type" class="custom-select w-full p-3 rounded-lg border-2 border-gray-700 bg-dark-card focus:outline-none transition-all duration-300 pr-10 text-white">
+                            <option value="float">Float to Hex/Binary</option>
+                            <option value="hex">Hex to Float</option>
+                            <option value="binary">Binary to Float</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Step 2: Output (Renumbered from 3) -->
+            <div>
+                <h2 class="text-2xl font-semibold text-white pb-2">2. Output</h2>
+                <!-- Button Group -->
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Gradient button -->
+                    <button id="calculate-btn" class="md:col-span-2 w-full text-white font-bold text-lg p-4 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-70 disabled:cursor-wait">
+                        Calculate
+                    </button>
+                    <!-- Clear Button -->
+                    <button id="clear-btn" class="w-full text-gray-300 font-bold text-lg p-4 rounded-lg shadow-lg bg-gray-700/50 hover:bg-gray-700/80 transform hover:-translate-y-0.5 transition-all duration-300">
+                        Clear
+                    </button>
+                </div>
+                
+                <!-- Glass output box + Copy button -->
+                <div class="relative mt-6">
+                    <button id="copy-btn" title="Copy to Clipboard" class="absolute top-4 right-4 p-2 rounded-lg bg-gray-500/10 text-gray-400 hover:bg-gray-500/20 hover:text-gray-200 transition-all">
+                        <svg id="copy-icon-default" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876V5.25a2.25 2.25 0 00-2.25-2.25h-1.5a2.25 2.25 0 00-2.25 2.25v.89m7.5 10.376l-3.375-3.375M15 12h-1.5M13.5 12h-1.5m-1.5 0h-1.5m-1.5 0h-1.5M7.5 12h-1.5m7.5 3h-1.5M13.5 15h-1.5m-1.5 0h-1.5m-1.5 0h-1.5M7.5 15h-1.5M6 18h.75" /></svg>
+                        <svg id="copy-icon-success" class="w-5 h-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </button>
+                    <!-- Dark mode output box -->
+                    <div id="result-box" class="backdrop-blur-sm bg-dark-glass p-6 rounded-lg shadow-inner min-h-[150px] overflow-x-auto border-2 border-gray-700/50">
+                        <p id="result-placeholder" class="text-text-light">Your calculation steps and result will appear here.</p>
+                        <pre id="result-content" class="whitespace-pre-wrap text-sm md:text-base text-white"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Main Calculator Section -->
+
+        <!-- "Product Features" Section -->
+        <div class="w-full mt-20">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-center text-white mb-8 tracking-tight">Features</h2>
+            
+            <div class="scroll-container overflow-x-auto flex space-x-6 p-4 -mx-4">
+                
+                <!-- FIX: Card 1 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">Number System Conversion</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> A number base (or *radix*) is the number of unique digits used to represent numbers. This calculation converts a number from one base to another.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Why it's Used:</strong> This is the most fundamental concept in COA. It explains how humans (Base 10) communicate with computers, which operate in Base 2 (Binary).</p>
+                    </div>
+                </div>
+                
+                <!-- FIX: Card 2 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">1's & 2's Complement</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> The standard method computers use to represent and handle negative numbers in binary.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Why it's Used:</strong> It massively simplifies hardware. Using 2's complement, subtraction (A minus B) becomes simple addition (A plus the 2's complement of B). This means the Arithmetic Logic Unit (ALU) only needs an "adder" circuit.</p>
+                    </div>
+                </div>
+                
+                <!-- FIX: Card 3 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">Decimal to BCD</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> Binary-Coded Decimal (BCD) encodes each *individual decimal digit* as a 4-bit binary group (a *nibble*).</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Why it's Used:</strong> It's vital in financial systems, calculators, and digital clocks where decimal rounding must be precise and interfacing with decimal displays is common.</p>
+                    </div>
+                </div>
+
+                <!-- FIX: Card 4 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">Decimal to Excess-3</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> Excess-3 is a non-weighted, "self-complementing" BCD code. You add 3 to each decimal digit *before* converting it to a 4-bit nibble.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Why it's Used:</strong> Its "self-complementing" nature. The 9's complement of a decimal digit can be found by simply flipping the bits (1's complement) of its Excess-3 code. This simplified subtraction hardware in older computers.</p>
+                    </div>
+                </div>
+
+                <!-- FIX: Card 5 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">Grey Code Converter</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> Grey Code is a "unit-distance" binary code where only *one single bit* changes between any two consecutive numbers.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Why it's Used:</strong> It prevents errors in electro-mechanical sensors (like a robotic arm) and is used in logic minimization (Karnaugh maps).</p>
+                    </div>
+                </div>
+
+                <!-- FIX: Card 6 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">Binary Arithmetic</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> The basic math (add, subtract) that the CPU's Arithmetic Logic Unit (ALU) performs at its lowest level.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Key Concepts:</strong> Addition follows simple rules (1+1=0, carry 1). Subtraction is performed by adding the 2's complement, simplifying the hardware design.</p>
+                    </div>
+                </div>
+
+                <!-- FIX: Card 7 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">BCD Arithmetic</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> Addition performed on BCD-coded numbers.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>The "Fix":</strong> If adding two 4-bit nibbles results in a value greater than 9, the result is an invalid BCD code. To correct this, you must <strong class="text-white font-medium">add 6 (0110)</strong> to that nibble. This adjustment produces the correct BCD result.</p>
+                    </div>
+                </div>
+
+                <!-- FIX: Card 8 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">Booth's Algorithm</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> Booth's Algorithm is a fast, efficient algorithm for multiplying two *signed* (2's complement) binary numbers.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Why it's Used:</strong> It's much faster than simple repeated addition. It can skip over long strings of 1s or 0s, reducing the number of operations.</p>
+                    </div>
+                </div>
+
+                <!-- FIX: Card 9 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">Restoring Division</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> Restoring Division is a basic algorithm for *unsigned* division that mimics "pen-and-paper" long division.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Algorithm:</strong> It tries to subtract the divisor (M). If the result is negative, it sets the quotient bit to 0 and *restores* the original value by adding M back. If positive, it sets the bit to 1. It's simple but slow.</p>
+                    </div>
+                </div>
+                
+                <!-- FIX: Card 10 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">Non-Restoring Division</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> Non-Restoring Division is a faster, more complex algorithm that avoids the time-wasting "restore" step.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Algorithm:</strong> If the accumulator is positive, it subtracts M. If it's negative, it *adds* M. It skips the restore cycle by compensating in the *next* cycle, making it more efficient.</p>
+                    </div>
+                </div>
+
+                <!-- FIX: Card 11 -->
+                <div class="info-card bg-gray-900 rounded-2xl shadow-xl w-80 md:w-96 flex-shrink-0 overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <div class="p-6">
+                        <h3 class="info-card-title text-2xl font-bold transition-colors duration-500">IEEE 754 Converter</h3>
+                        <button class="accordion-toggle w-full flex justify-between items-center text-left mt-4">
+                            <span class="info-card-arrow text-lg font-medium transition-colors duration-500">Learn more &rarr;</span>
+                            <span class="accordion-arrow text-3xl font-light text-gray-400 transition-transform duration-300"></span>
+                        </button>
+                    </div>
+                    <div class="accordion-content px-6 pb-6 space-y-3">
+                        <p class="text-gray-300 leading-relaxed"><strong>What it is:</strong> IEEE 754 is the universal standard format for "floating-point" (decimal) numbers in computing.</p>
+                        <p class="text-gray-300 leading-relaxed"><strong>Structure (32-bit):</strong> It's composed of a 1-bit Sign, an 8-bit Exponent (with a bias of 127), and a 23-bit Mantissa (the precision digits).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Info Section -->
+
+        <footer class="text-center text-text-light mt-12 py-4">
+            Made with ❤️ by team AAG
+        </footer>
+
+    </div> 
+    <!-- End Main Container -->
+
+    <script>
+        let currentMethod = 'base-conversion';
+
+        // --- DOM Elements ---
+        const bodyEl = document.body;
+        const methodSelect = document.getElementById('method-select');
+        const inputsContainer = document.getElementById('inputs-container');
+        const allInputSections = inputsContainer.querySelectorAll('.input-section');
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resultBox = document.getElementById('result-box');
+        const calculatorCard = document.getElementById('calculator-card');
+        const allInputs = document.querySelectorAll('input[type="text"], input[type="number"], select');
+        const accordionToggles = document.querySelectorAll('.accordion-toggle');
+        const clearBtn = document.getElementById('clear-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const copyIconDefault = document.getElementById('copy-icon-default');
+        const copyIconSuccess = document.getElementById('copy-icon-success');
+        const resultPlaceholder = document.getElementById('result-placeholder');
+        const resultContent = document.getElementById('result-content');
+        
+        const headerBrand = document.getElementById('header-brand');
+        const headerSubtitle = document.getElementById('header-subtitle');
+        const allInfoCardTitles = document.querySelectorAll('.info-card-title');
+        const allInfoCardArrows = document.querySelectorAll('.info-card-arrow');
+
+
+        // --- "Product Launch" Theme Mapping ---
+        const methodColors = {
+            'base-conversion': { 
+                radial: 'radial-gradient(ellipse at top, #0c4a6e 0%, #111827 60%)', // sky-dark
+                border: '#38bdf8', // sky-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-sky to-blue-500 hover:from-theme-sky/80 hover:to-blue-500/80',
+                text: 'text-theme-sky',
+                brand: 'bg-gradient-to-r from-theme-sky to-blue-500',
+                subtitle: 'text-sky-300'
+            },
+            'twos-complement': { 
+                radial: 'radial-gradient(ellipse at top, #047857 0%, #111827 60%)', // emerald-dark
+                border: '#34d399', // emerald-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-emerald to-green-500 hover:from-theme-emerald/80 hover:to-green-500/80',
+                text: 'text-theme-emerald',
+                brand: 'bg-gradient-to-r from-theme-emerald to-green-500',
+                subtitle: 'text-emerald-300'
+            },
+            'bcd-conversion': { 
+                radial: 'radial-gradient(ellipse at top, #b45309 0%, #111827 60%)', // amber-dark
+                border: '#f59e0b', // amber-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-amber to-yellow-500 hover:from-theme-amber/80 hover:to-yellow-500/80',
+                text: 'text-theme-amber',
+                brand: 'bg-gradient-to-r from-theme-amber to-yellow-500',
+                subtitle: 'text-amber-300'
+            },
+            'excess3-conversion': { 
+                radial: 'radial-gradient(ellipse at top, #4d7c0f 0%, #111827 60%)', // lime-dark
+                border: '#a3e635', // lime-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-lime to-green-500 hover:from-theme-lime/80 hover:to-green-500/80',
+                text: 'text-theme-lime',
+                brand: 'bg-gradient-to-r from-theme-lime to-green-500',
+                subtitle: 'text-lime-300'
+            },
+            'grey-code-conversion': { 
+                radial: 'radial-gradient(ellipse at top, #155e75 0%, #111827 60%)', // cyan-dark
+                border: '#22d3ee', // cyan-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-cyan to-teal-500 hover:from-theme-cyan/80 hover:to-teal-500/80',
+                text: 'text-theme-cyan',
+                brand: 'bg-gradient-to-r from-theme-cyan to-teal-500',
+                subtitle: 'text-cyan-300'
+            },
+            'binary-arithmetic': { 
+                radial: 'radial-gradient(ellipse at top, #3730a3 0%, #111827 60%)', // indigo-dark
+                border: '#818cf8', // indigo-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-indigo to-violet-500 hover:from-theme-indigo/80 hover:to-violet-500/80',
+                text: 'text-theme-indigo',
+                brand: 'bg-gradient-to-r from-theme-indigo to-violet-500',
+                subtitle: 'text-indigo-300'
+            },
+            'bcd-arithmetic': { 
+                radial: 'radial-gradient(ellipse at top, #1e40af 0%, #111827 60%)', // blue-dark
+                border: '#60a5fa', // blue-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-blue to-cyan-500 hover:from-theme-blue/80 hover:to-cyan-500/80',
+                text: 'text-theme-blue',
+                brand: 'bg-gradient-to-r from-theme-blue to-cyan-500',
+                subtitle: 'text-blue-300'
+            },
+            'booths-algorithm': { 
+                radial: 'radial-gradient(ellipse at top, #9f1239 0%, #111827 60%)', // rose-dark
+                border: '#fb7185', // rose-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-rose to-red-500 hover:from-theme-rose/80 hover:to-red-500/80',
+                text: 'text-theme-rose',
+                brand: 'bg-gradient-to-r from-theme-rose to-red-500',
+                subtitle: 'text-rose-300'
+            },
+            'restoring-division': { 
+                radial: 'radial-gradient(ellipse at top, #9d174d 0%, #111827 60%)', // pink-dark
+                border: '#f472b6', // pink-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-pink to-fuchsia-500 hover:from-theme-pink/80 hover:to-fuchsia-500/80',
+                text: 'text-theme-pink',
+                brand: 'bg-gradient-to-r from-theme-pink to-fuchsia-500',
+                subtitle: 'text-pink-300'
+            },
+            'non-restoring-division': { 
+                radial: 'radial-gradient(ellipse at top, #5b21b6 0%, #111827 60%)', // violet-dark
+                border: '#a78bfa', // violet-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-violet to-purple-500 hover:from-theme-violet/80 hover:to-purple-500/80',
+                text: 'text-theme-violet',
+                brand: 'bg-gradient-to-r from-theme-violet to-purple-500',
+                subtitle: 'text-violet-300'
+            },
+            'ieee-754-converter': { 
+                radial: 'radial-gradient(ellipse at top, #134e4a 0%, #111827 60%)', // teal-dark
+                border: '#2dd4bf', // teal-DEFAULT
+                btn: 'bg-gradient-to-r from-theme-teal to-emerald-500 hover:from-theme-teal/80 hover:to-emerald-500/80',
+                text: 'text-theme-teal',
+                brand: 'bg-gradient-to-r from-theme-teal to-emerald-500',
+                subtitle: 'text-teal-300'
+            }
+        };
+
+        // --- Event Listeners ---
+
+        // Dropdown listener
+        methodSelect.addEventListener('change', () => {
+            currentMethod = methodSelect.value;
+            updateTheme(currentMethod);
+            updateInputSection(currentMethod);
+            resetResultBox();
+        });
+        
+        // Calculate button
+        calculateBtn.addEventListener('click', () => {
+            // Set loading state
+            calculateBtn.innerHTML = 'Calculating...';
+            calculateBtn.disabled = true;
+            resetResultBox();
+            
+            // Delay calculation slightly to allow UI to update
+            setTimeout(() => {
+                try {
+                    switch (currentMethod) {
+                        case 'base-conversion': calculateBaseConversion(); break;
+                        case 'twos-complement': calculateTwosComplement(); break;
+                        case 'bcd-conversion': calculateBcdConversion(); break;
+                        case 'excess3-conversion': calculateExcess3Conversion(); break;
+                        case 'grey-code-conversion': calculateGreyCodeConversion(); break;
+                        case 'binary-arithmetic': calculateBinaryArithmetic(); break;
+                        case 'bcd-arithmetic': calculateBcdArithmetic(); break;
+                        case 'booths-algorithm': calculateBoothsAlgorithm(); break;
+                        case 'restoring-division': calculateRestoringDivision(); break;
+                        case 'non-restoring-division': calculateNonRestoringDivision(); break;
+                        case 'ieee-754-converter': calculateIeee754(); break;
+                        default: showError("Please select a valid method.");
+                    }
+                } catch (e) {
+                    showError(`${e.message}`);
+                    console.error(e);
+                } finally {
+                    // Reset button state
+                    calculateBtn.innerHTML = 'Calculate';
+                    calculateBtn.disabled = false;
+                }
+            }, 50); // 50ms delay
+        });
+        
+        // Clear Button Listener
+        clearBtn.addEventListener('click', () => {
+            const activeSection = document.getElementById(`inputs-${currentMethod}`);
+            if (!activeSection) return;
+            
+            // Clear all inputs and selects in the active section
+            activeSection.querySelectorAll('input').forEach(input => input.value = '');
+            activeSection.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+            
+            resetResultBox();
+        });
+        
+        // Copy Button Listener
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = resultContent.innerText;
+            if (!textToCopy) return;
+            
+            // Fallback method for iFrame
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            textArea.style.position = "fixed";  // Avoid scrolling to bottom
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                // Show success feedback
+                copyBtn.classList.add('bg-emerald-500/20', 'text-emerald-700');
+                copyIconDefault.classList.add('hidden');
+                copyIconSuccess.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    copyBtn.classList.remove('bg-emerald-500/20', 'text-emerald-700');
+                    copyIconDefault.classList.remove('hidden');
+                    copyIconSuccess.classList.add('hidden');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            
+            document.body.removeChild(textArea);
+        });
+
+        // Accordion toggle
+        accordionToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const content = toggle.parentElement.nextElementSibling;
+                const arrow = toggle.querySelector('.accordion-arrow');
+                
+                content.classList.toggle('open');
+                arrow.classList.toggle('open');
+            });
+        });
+
+        // --- UI Update Functions ---
+
+        // Reworked this function to update all theme elements
+        function updateTheme(method) {
+            const theme = methodColors[method] || methodColors['base-conversion'];
+            const allCurrentInputs = document.querySelectorAll('input, select');
+
+            // 1. Set Page Background
+            bodyEl.style.background = theme.radial;
+            
+            // 2. Set Calculator Card Border
+            calculatorCard.style.borderColor = theme.border;
+            
+            // 3. Set Button Gradient
+            // Remove all old gradient classes
+            Object.values(methodColors).forEach(color => {
+                calculateBtn.classList.remove(...color.btn.split(' '));
+                headerBrand.classList.remove(...color.brand.split(' '));
+                headerSubtitle.classList.remove(color.subtitle);
+                allInfoCardTitles.forEach(title => title.classList.remove(color.text));
+                allInfoCardArrows.forEach(arrow => arrow.classList.remove(color.text));
+            });
+            calculateBtn.classList.add(...theme.btn.split(' '));
+            
+            // 4. Set Header Brand and Subtitle
+            headerBrand.classList.add(...theme.brand.split(' '));
+            headerSubtitle.classList.add(theme.subtitle);
+            
+            // 5. Set Info Card Title Colors
+            allInfoCardTitles.forEach(title => title.classList.add(theme.text));
+            allInfoCardArrows.forEach(arrow => arrow.classList.add(theme.text));
+
+            // 6. Set Input Focus Ring
+            allInputs.forEach(input => {
+                input.style.setProperty('--tw-ring-color', theme.border);
+                input.classList.add('focus:ring-2');
+            });
+        }
+                
+        function updateInputSection(method) {
+            // Hide all input sections
+            allInputSections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show the correct one
+            const newActiveSection = document.getElementById(`inputs-${method}`);
+            if (newActiveSection) {
+                newActiveSection.classList.add('active');
+            }
+        }
+        
+        // --- Validation & Helper Functions ---
+        
+        function resetResultBox() {
+            resultPlaceholder.classList.remove('hidden');
+            resultContent.innerHTML = '';
+            copyBtn.style.display = 'none';
+        }
+        
+        function showError(message) {
+            resultPlaceholder.classList.add('hidden');
+            resultContent.innerHTML = `<span class="text-rose-400 font-medium">${message}</span>`;
+            copyBtn.style.display = 'none';
+        }
+        function showResult(htmlContent) {
+            resultPlaceholder.classList.add('hidden');
+            resultContent.innerHTML = htmlContent;
+            copyBtn.style.display = 'block'; // Show the copy button
+        }
+        function isBinary(str) { return /^[01]+$/.test(str.replace(/\s/g, '')); }
+        function isDecimal(str) { return /^-?[0-9]+$/.test(str.replace(/\s/g, '')); }
+        function isHex(str) { return /^[0-9a-fA-F]+$/.test(str.replace(/0x/g, '')); }
+        
+        // Pad with leading sign bit (for arithmetic)
+        function padSign(binStr, bits) {
+            const sign = binStr.startsWith('-') ? '1' : '0';
+            if(sign === '1') binStr = binStr.substring(1);
+            return binStr.padStart(bits, sign);
+        }
+        // Pad with leading zeros
+        function padZero(binStr, bits) {
+            return binStr.padStart(bits, '0');
+        }
+
+        function toBinary(num, bits) {
+            if (num >= 0) {
+                return num.toString(2).padStart(bits, '0');
+            }
+            // For negative numbers, get 2's complement
+            let posBin = (Math.abs(num)).toString(2).padStart(bits, '0');
+            return twosComplement(posBin);
+        }
+        
+        // Binary to Signed Decimal (2's Comp)
+        function binToDec(binStr) {
+            if (binStr.length < 1) return 0;
+            if (binStr[0] === '0') {
+                return parseInt(binStr, 2);
+            }
+            // It's negative
+            let inverted = binStr.split('').map(b => b === '1' ? '0' : '1').join('');
+            let posVal = parseInt(inverted, 2) + 1;
+            return -posVal;
+        }
+
+        function addBinary(binA, binB) {
+            let n = Math.max(binA.length, binB.length);
+            binA = padSign(binA, n);
+            binB = padSign(binB, n);
+            
+            let result = '';
+            let carry = 0;
+            for (let i = n - 1; i >= 0; i--) {
+                let bitA = parseInt(binA[i]);
+                let bitB = parseInt(binB[i]);
+                let sum = bitA + bitB + carry;
+                result = (sum % 2) + result;
+                carry = sum > 1 ? 1 : 0;
+            }
+            // In 2's complement, final carry is discarded, but we check for overflow
+            // Overflow: (A>0, B>0, R<0) or (A<0, B<0, R>0)
+            const overflow = (binA[0] === '0' && binB[0] === '0' && result[0] === '1') ||
+                             (binA[0] === '1' && binB[0] === '1' && result[0] === '0');
+            return { sum: result, carry, overflow };
+        }
+
+        function twosComplement(binStr) {
+            let inverted = binStr.split('').map(bit => (bit === '1' ? '0' : '1')).join('');
+            let one = '1'.padStart(binStr.length, '0');
+            let result = addBinary(inverted, one).sum;
+            // Ensure result is same length (e.g., 2's comp of 000... is 1000... -> truncate)
+            return result.slice(-binStr.length);
+        }
+
+        // --- 1. Base Conversion ---
+        function calculateBaseConversion() {
+            const numStr = document.getElementById('number-base').value.trim();
+            const fromBase = parseInt(document.getElementById('from-base').value);
+            const toBase = parseInt(document.getElementById('to-base').value);
+
+            if (numStr === "") throw new Error("Please enter a number to convert.");
+
+            // --- VALIDATION BLOCK (from last fix) ---
+            if (fromBase === 2 && !isBinary(numStr)) {
+                throw new Error(`Invalid binary number. "${numStr}" contains digits other than 0 or 1.`);
+            }
+            if (fromBase === 8 && !/^[0-7]+$/.test(numStr.replace(/\s/g, ''))) {
+                throw new Error(`Invalid octal number. "${numStr}" contains digits other than 0-7.`);
+            }
+            if (fromBase === 10 && !isDecimal(numStr)) {
+                throw new Error(`Invalid decimal number. "${numStr}" contains non-numeric digits.`);
+            }
+            if (fromBase === 16 && !isHex(numStr)) {
+                throw new Error(`Invalid hexadecimal number. "${numStr}" contains characters other than 0-9, A-F.`);
+            }
+            // --- END VALIDATION BLOCK ---
+            
+            const decimalVal = parseInt(numStr, fromBase);
+            if (isNaN(decimalVal)) throw new Error(`Could not parse "${numStr}" as base ${fromBase}.`); // Fallback
+            
+            const result = decimalVal.toString(toBase).toUpperCase();
+            showResult(`(${numStr})${fromBase}  =  (${decimalVal})${10}\n\n<strong>Result: (${result})${toBase}</strong>`);
+        }
+
+        // --- 2. 1's & 2's Complement ---
+        function calculateTwosComplement() {
+            const binStr = document.getElementById('binary-in').value.trim();
+            if (binStr === "") throw new Error("Please enter a binary string.");
+            if (!isBinary(binStr)) throw new Error("Please enter a valid binary string (only 0s and 1s).");
+            
+            const onesComp = binStr.split('').map(bit => (bit === '1' ? '0' : '1')).join('');
+            const twosComp = twosComplement(binStr);
+            showResult(`Original:   ${binStr}\n1's Comp:   <strong>${onesComp}</strong>\n2's Comp:   <strong>${twosComp}</strong>`);
+        }
+
+        // --- 3. BCD Conversion ---
+        function calculateBcdConversion() {
+            const decStr = document.getElementById('decimal-in-bcd').value.trim();
+            if (decStr === "") throw new Error("Please enter a decimal number.");
+            if (!isDecimal(decStr) || decStr.includes('-')) throw new Error("Please enter a valid positive decimal string (only 0-9).");
+            
+            const bcd = decStr.split('').map(digit => parseInt(digit).toString(2).padStart(4, '0')).join(' ');
+            showResult(`Decimal:   ${decStr}\nBCD:       <strong>${bcd}</strong>`);
+        }
+
+        // --- 4. Excess-3 Conversion ---
+        function calculateExcess3Conversion() {
+            const decStr = document.getElementById('decimal-in-ex3').value.trim();
+            if (decStr === "") throw new Error("Please enter a decimal number.");
+            if (!isDecimal(decStr) || decStr.includes('-')) throw new Error("Please enter a valid positive decimal string (only 0-9).");
+            
+            const ex3 = decStr.split('').map(digit => (parseInt(digit) + 3).toString(2).padStart(4, '0')).join(' ');
+            showResult(`Decimal:   ${decStr}\nExcess-3:  <strong>${ex3}</strong>`);
+        }
+
+        // --- 5. Grey Code Conversion ---
+        function calculateGreyCodeConversion() {
+            const val = document.getElementById('grey-in-val').value.trim();
+            const type = document.getElementById('grey-in-type').value;
+            if (val === "") throw new Error("Please enter an input value.");
+
+            if (type === 'binary') {
+                if (!isBinary(val)) throw new Error("Please enter a valid binary string.");
+                let grey = val[0];
+                for (let i = 1; i < val.length; i++) {
+                    grey += parseInt(val[i-1]) ^ parseInt(val[i]);
+                }
+                showResult(`Binary:  ${val}\nGrey:    <strong>${grey}</strong>`);
+            } else if (type === 'decimal') {
+                if (!isDecimal(val) || val < 0) throw new Error("Please enter a valid positive decimal number.");
+                const bin = parseInt(val).toString(2);
+                let grey = bin[0];
+                for (let i = 1; i < bin.length; i++) {
+                    grey += parseInt(bin[i-1]) ^ parseInt(val[i]);
+                }
+                showResult(`Decimal: ${val}\nBinary:  ${bin}\nGrey:    <strong>${grey}</strong>`);
+            } else { // 'grey-binary'
+                if (!isBinary(val)) throw new Error("Please enter a valid grey code string.");
+                let bin = val[0];
+                for (let i = 1; i < val.length; i++) {
+                    bin += parseInt(bin[i-1]) ^ parseInt(val[i]);
+                }
+                showResult(`Grey:    ${val}\nBinary:  <strong>${bin}</strong>`);
+            }
+        }
+
+        // --- 6. Parity (REMOVED) ---
+
+        // --- 7. Binary Arithmetic ---
+        function calculateBinaryArithmetic() {
+            let binA = document.getElementById('binary-a').value.trim();
+            let binB = document.getElementById('binary-b').value.trim();
+            const op = document.getElementById('binary-op').value;
+            
+            if (binA === "" || binB === "") throw new Error("Please enter two binary numbers.");
+            if (!isBinary(binA) || !isBinary(binB)) throw new Error("Please enter valid binary strings.");
+            
+            let n = Math.max(binA.length, binB.length);
+            binA = padZero(binA, n);
+            binB = padZero(binB, n);
+            
+            let result = {};
+            let opStr = '';
+            
+            if (op === 'add') {
+                result = addBinary(binA, binB);
+                opStr = `  ${binA} (A)\n+ ${binB} (B)`;
+            } else {
+                let twosCompB = twosComplement(binB);
+                result = addBinary(binA, twosCompB);
+                opStr = `  ${binA} (A)\n- ${binB} (B)  =>  ${binA} + (${twosCompB}) [-B]`;
+            }
+            
+            let finalResult = result.sum.slice(-n);
+            let decA = binToDec(binA);
+            let decB = binToDec(binB);
+            let decRes = binToDec(finalResult);
+            
+            showResult(
+`${opStr}
+-----------------
+Binary Result:   <strong>${finalResult}</strong>
+Carry-out: ${result.carry}
+Overflow: ${result.overflow ? 'YES' : 'NO'}
+
+Decimal Check: ${decA} ${op === 'add' ? '+' : '-'} ${decB} = ${decRes}`
+            );
+        }
+        
+        // --- 8. BCD Arithmetic (Add) ---
+        function calculateBcdArithmetic() {
+            let bcdA = document.getElementById('bcd-a').value.replace(/\s/g, '');
+            let bcdB = document.getElementById('bcd-b').value.replace(/\s/g, '');
+            
+            if (bcdA === "" || bcdB === "") throw new Error("Please enter two BCD numbers.");
+            if (!isBinary(bcdA) || !isBinary(bcdB)) throw new Error("Inputs must be binary BCD strings.");
+            if (bcdA.length % 4 !== 0 || bcdB.length % 4 !== 0) throw new Error("Inputs must be valid BCD (groups of 4 bits).");
+
+            let n = Math.max(bcdA.length, bcdB.length);
+            bcdA = padZero(bcdA, n);
+            bcdB = padZero(bcdB, n);
+            
+            let result = '';
+            let carry = 0;
+            let steps = `  ${bcdA.match(/.{1,4}/g).join(' ')} (A)\n+ ${bcdB.match(/.{1,4}/g).join(' ')} (B)\n---------------------------\n`;
+
+            for (let i = n - 4; i >= 0; i -= 4) {
+                let nibbleA = bcdA.substring(i, i + 4);
+                let nibbleB = bcdB.substring(i, i + 4);
+                
+                let nibbleSum = addBinary(nibbleA, padZero(carry.toString(), 4)).sum.slice(-4);
+                let sumResult = addBinary(nibbleSum, nibbleB); // Use full result
+                
+                let decSum = parseInt(sumResult.sum.slice(-4), 2);
+                
+                if (decSum > 9 || sumResult.carry) {
+                    let corrSum = addBinary(sumResult.sum.slice(-4), '0110');
+                    result = corrSum.sum.slice(-4) + result;
+                    carry = 1;
+                    steps += `Nibble ${i/4}: ${nibbleA} + ${nibbleB} + ${carry ? 1 : 0}(c_in) = ${sumResult.sum}\n        > 9 or Carry, so add 6: ${sumResult.sum.slice(-4)} + 0110 = ${corrSum.sum}\n        Result Nibble: ${corrSum.sum.slice(-4)}, Carry-out: 1\n\n`;
+                } else {
+                    result = sumResult.sum.slice(-4) + result;
+                    carry = 0;
+                    steps += `Nibble ${i/4}: ${nibbleA} + ${nibbleB} + ${carry ? 1 : 0}(c_in) = ${sumResult.sum}\n        <= 9, no correction.\n        Result Nibble: ${sumResult.sum.slice(-4)}, Carry-out: 0\n\n`;
+                }
+            }
+
+            if (carry) {
+                result = '0001' + result; // Add final carry as new BCD digit
+                steps += "Final carry-out: 1\n";
+            }
+            
+            showResult(`${steps}\n<strong>Final Result: ${result.match(/.{1,4}/g).join(' ')}</strong>`);
+        }
+
+        // --- 9. Booth's Algorithm ---
+        function calculateBoothsAlgorithm() {
+            let M_dec = parseInt(document.getElementById('booth-m').value);
+            let Q_dec = parseInt(document.getElementById('booth-q').value);
+            if (isNaN(M_dec) || isNaN(Q_dec)) throw new Error("Please enter valid decimal integers.");
+
+            let n = Math.max(
+                Math.abs(M_dec).toString(2).length, 
+                Math.abs(Q_dec).toString(2).length
+            ) + 1; // +1 for sign
+            
+            let M = toBinary(M_dec, n);
+            let negM = toBinary(-M_dec, n);
+            let Q = toBinary(Q_dec, n);
+            let A = padZero('', n);
+            let Q_neg1 = '0';
+            
+            let steps = `<strong>Initial Setup:</strong> n = ${n} bits
+M (Multiplicand)  = ${M} (${M_dec})
+-M (2's Comp)     = ${negM} (${-M_dec})
+A (Accumulator)   = ${A}
+Q (Multiplier)    = ${Q} (${Q_dec})
+Q₋₁ (Extra bit)   = ${Q_neg1}
+----------------------------------------------------------------
+ Step | Operation         | A (n bits) | Q (n bits) | Q₋₁ | Q₀Q₋₁
+----------------------------------------------------------------
+ 0    | Initial           | ${A} | ${Q} | ${Q_neg1} |  -
+`;
+            
+            for (let i = 0; i < n; i++) {
+                let op = '';
+                let Q0 = Q[n - 1];
+                let bits = Q0 + Q_neg1;
+
+                if (bits === '10') {
+                    A = addBinary(A, negM).sum;
+                    op = 'A = A - M';
+                } else if (bits === '01') {
+                    A = addBinary(A, M).sum;
+                    op = 'A = A + M';
+                } else { // '00' or '11'
+                    op = 'No-op    ';
+                }
+                steps += ` ${i+1}a   | ${op.padEnd(17)} | ${A} | ${Q} | ${Q_neg1} | ${bits}\n`;
+
+                // Arithmetic Right Shift (A, Q, Q_neg1)
+                Q_neg1 = Q[n - 1];
+                Q = A[n - 1] + Q.slice(0, n - 1);
+                A = A[0] + A.slice(0, n - 1); // MSB copied
+                
+                steps += ` ${i+1}b   | A.R. Shift        | ${A} | ${Q} | ${Q_neg1} |
+----------------------------------------------------------------
+`;
+            }
+            
+            let resultBin = A + Q;
+            let resultDec = binToDec(resultBin);
+            
+            steps += `<strong>Final Result (A.Q): ${resultBin}</strong>
+<strong>Decimal: ${resultDec}</strong> (Check: ${M_dec} * ${Q_dec} = ${M_dec * Q_dec})`;
+            showResult(steps);
+        }
+
+        // --- 10. Restoring Division ---
+        function calculateRestoringDivision() {
+            let Q_dec = parseInt(document.getElementById('dividend-r').value);
+            let M_dec = parseInt(document.getElementById('divisor-r').value);
+            if (isNaN(Q_dec) || isNaN(M_dec)) throw new Error("Please enter valid positive integers.");
+            if (M_dec === 0) throw new Error("Cannot divide by zero.");
+            if (Q_dec < 0 || M_dec < 0) throw new Error("This algorithm supports positive integers only.");
+
+            let n = Math.max(Q_dec.toString(2).length, 4); // Min 4 bits for Q
+            let bits = Math.max(n + 1, M_dec.toString(2).length + 1); // A, M must be at least n+1
+            
+            let Q = toBinary(Q_dec, n);
+            let M = toBinary(M_dec, bits);
+            let negM = twosComplement(M);
+            let A = padZero('', bits);
+            
+            let steps = `<strong>Initial Setup:</strong> n = ${n} (bits in Q)
+Q (Dividend)  = ${Q} (${Q_dec})
+M (Divisor)   = ${M} (${M_dec})
+-M (2's Comp) = ${negM}
+A (Accumulator) = ${A} (${bits} bits)
+-----------------------------------------------------
+ Step | Operation         | A (${bits} bits) | Q (${n} bits)
+-----------------------------------------------------
+ 0    | Initial           | ${A} | ${Q}
+`;
+
+            for (let i = 0; i < n; i++) {
+                // 1. Shift Left A, Q
+                A = (A.substring(1) + Q.charAt(0));
+                Q = Q.substring(1) + '_';
+                steps += ` ${i+1}a   | Shift Left (A,Q)  | ${A} | ${Q}\n`;
+
+                // 2. A = A - M
+                A = addBinary(A, negM).sum.slice(-bits);
+                steps += ` ${i+1}b   | A = A - M         | ${A} | ${Q}\n`;
+
+                // 3. Check sign bit of A
+                if (A[0] === '1') { // A < 0
+                    Q = Q.substring(0, n - 1) + '0';
+                    A = addBinary(A, M).sum.slice(-bits); // Restore A
+                    steps += ` ${i+1}c   | A < 0, set Q₀=0   | ${A} | ${Q}\n       | Restore A=A+M     |\n`;
+                } else { // A >= 0
+                    Q = Q.substring(0, n - 1) + '1';
+                    steps += ` ${i+1}c   | A ≥ 0, set Q₀=1   | ${A} | ${Q}\n`;
+                }
+                steps += `-----------------------------------------------------
+`;
+            }
+            steps += `<strong>Final Result:</strong>
+Quotient (Q)  = ${Q} = <strong>${parseInt(Q, 2)}</strong>
+Remainder (A) = ${A} = <strong>${parseInt(A, 2)}</strong>
+(Check: ${Q_dec} / ${M_dec} = ${Math.floor(Q_dec / M_dec)} R ${Q_dec % M_dec})`;
+            showResult(steps);
+        }
+
+        // --- 11. Non-Restoring Division ---
+        function calculateNonRestoringDivision() {
+            let Q_dec = parseInt(document.getElementById('dividend-nr').value);
+            let M_dec = parseInt(document.getElementById('divisor-nr').value);
+            if (isNaN(Q_dec) || isNaN(M_dec)) throw new Error("Please enter valid positive integers.");
+            if (M_dec === 0) throw new Error("Cannot divide by zero.");
+            if (Q_dec < 0 || M_dec < 0) throw new Error("This algorithm supports positive integers only.");
+
+            let n = Math.max(Q_dec.toString(2).length, 4); // Min 4 bits for Q
+            let bits = Math.max(n + 1, M_dec.toString(2).length + 1);
+
+            let Q = toBinary(Q_dec, n);
+            let M = toBinary(M_dec, bits);
+            let negM = twosComplement(M);
+            let A = padZero('', bits);
+            
+            let steps = `<strong>Initial Setup:</strong> n = ${n} (bits in Q)
+Q (Dividend)  = ${Q} (${Q_dec})
+M (Divisor)   = ${M} (${M_dec})
+-M (2's Comp) = ${negM}
+A (Accumulator) = ${A} (${bits} bits)
+-----------------------------------------------------
+ Step | Operation         | A (${bits} bits) | Q (${n} bits)
+-----------------------------------------------------
+ 0    | Initial           | ${A} | ${Q}
+`;
+            for (let i = 0; i < n; i++) {
+                if (A[0] === '0') { // A >= 0
+                    A = (A.substring(1) + Q.charAt(0));
+                    Q = Q.substring(1);
+                    steps += ` ${i+1}a   | A ≥ 0, Shift (A,Q) | ${A} | ${Q + '_'}\n`;
+                    A = addBinary(A, negM).sum.slice(-bits);
+                    steps += ` ${i+1}b   | A = A - M         | ${A} | ${Q + '_'}\n`;
+                } else { // A < 0
+                    A = (A.substring(1) + Q.charAt(0));
+                    Q = Q.substring(1);
+                    steps += ` ${i+1}a   | A < 0, Shift (A,Q) | ${A} | ${Q + '_'}\n`;
+                    A = addBinary(A, M).sum.slice(-bits);
+                    steps += ` ${i+1}b   | A = A + M         | ${A} | ${Q + '_'}\n`;
+                }
+
+                if (A[0] === '0') { // A >= 0
+                    Q += '1';
+                    steps += ` ${i+1}c   | A ≥ 0, set Q₀=1   | ${A} | ${Q}\n`;
+                } else { // A < 0
+                    Q += '0';
+                    steps += ` ${i+1}c   | A < 0, set Q₀=0   | ${A} | ${Q}\n`;
+                }
+                steps += `-----------------------------------------------------
+`;
+            }
+
+            if (A[0] === '1') { // Final Correction
+                steps += ` Final | A < 0, Correction | ${A} | ${Q}\n`;
+                A = addBinary(A, M).sum.slice(-bits);
+                steps += `       | A = A + M         | ${A} | ${Q}\n-----------------------------------------------------
+`;
+            }
+
+            steps += `<strong>Final Result:</strong>
+Quotient (Q)  = ${Q} = <strong>${parseInt(Q, 2)}</strong>
+Remainder (A) = ${A} = <strong>${parseInt(A, 2)}</strong>
+(Check: ${Q_dec} / ${M_dec} = ${Math.floor(Q_dec / M_dec)} R ${Q_dec % M_dec})`;
+            showResult(steps);
+        }
+
+        // --- 12. IEEE 754 Converter ---
+        function calculateIeee754() {
+            const val = document.getElementById('ieee-in-val').value.trim();
+            const type = document.getElementById('ieee-in-type').value;
+            if (val === "") throw new Error("Please enter an input value.");
+            
+            const buffer = new ArrayBuffer(4);
+            const floatView = new Float32Array(buffer);
+            const intView = new DataView(buffer);
+
+            let floatResult = 0;
+            let binResult = '';
+            
+            if (type === 'float') {
+                floatResult = parseFloat(val);
+                if (isNaN(floatResult)) throw new Error("Invalid float number.");
+                floatView[0] = floatResult;
+                binResult = intView.getUint32(0).toString(2).padStart(32, '0');
+            } else if (type === 'hex') {
+                if (!isHex(val)) throw new Error("Invalid hex string (e.g., 0x414C0000).");
+                let hexVal = val.startsWith('0x') ? val.substring(2) : val;
+                binResult = parseInt(hexVal, 16).toString(2).padStart(32, '0');
+                intView.setUint32(0, parseInt(binResult, 2));
+                floatResult = floatView[0];
+            } else { // binary
+                if (!isBinary(val) || (val.length !== 32 && val.replace(/\s/g, '').length !== 32)) {
+                    throw new Error("Invalid 32-bit binary string.");
+                }
+                binResult = val.replace(/\s/g, '');
+                intView.setUint32(0, parseInt(binResult, 2));
+                floatResult = floatView[0];
+            }
+            
+            const sign = binResult[0];
+            const exponent = binResult.substring(1, 9);
+            const mantissa = binResult.substring(9);
+            const hexResult = parseInt(binResult, 2).toString(16).toUpperCase().padStart(8, '0');
+            
+            showResult(
+`Float:    <strong>${floatResult}</strong>
+Hex:      <strong>0x${hexResult}</strong>
+
+Binary (32-bit):
+Sign:     <strong>${sign}</strong> ( ${sign === '1' ? 'Negative' : 'Positive'} )
+Exponent: <strong>${exponent}</strong> (Bias 127)
+Mantissa: <strong>${mantissa}</strong>
+
+Full Binary:
+<strong>${sign} ${exponent} ${mantissa}</strong>`
+            );
+        }
+        
+        // --- Initial Load ---
+        updateTheme(currentMethod); // Set initial theme
+        
+    </script>
+</body>
+</html>
+
+
